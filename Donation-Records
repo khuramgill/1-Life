@@ -1,0 +1,50 @@
+<?php
+// Include the database connection file
+require_once "conn.php";
+
+// Get logged-in user's ID (replace with actual user ID retrieval logic)
+$user_id = 1; // Example user ID, replace with actual logic to get logged-in user's ID
+
+// SQL query to retrieve donation records based on user type (administrator, donor, or recipient)
+$sql = "SELECT dr.record_id, dr.donation_id, dr.date_received, dr.quantity_ml, 
+               dr.recipient_id, r.name AS recipient_name, 
+               t.transaction_id, t.amount, t.transaction_date
+        FROM DonationRecords dr
+        LEFT JOIN Recipients r ON dr.recipient_id = r.recipient_id
+        LEFT JOIN Transactions t ON dr.donation_id = t.donation_id
+        WHERE dr.donor_id = $user_id OR dr.recipient_id = $user_id
+        ORDER BY dr.date_received DESC";
+
+// Execute SQL query
+$result = mysqli_query($conn, $sql);
+
+// Check if records were found
+if (mysqli_num_rows($result) > 0) {
+    // Display donation records in a table format
+    echo "<h2>Donation Records</h2>";
+    echo "<table border='1'>";
+    echo "<tr><th>Record ID</th><th>Donation ID</th><th>Date Received</th><th>Quantity (ml)</th>
+              <th>Recipient Name</th><th>Transaction ID</th><th>Amount</th><th>Transaction Date</th></tr>";
+    
+    // Output data of each row
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<tr>";
+        echo "<td>" . $row["record_id"] . "</td>";
+        echo "<td>" . $row["donation_id"] . "</td>";
+        echo "<td>" . $row["date_received"] . "</td>";
+        echo "<td>" . $row["quantity_ml"] . "</td>";
+        echo "<td>" . ($row["recipient_name"] ?: "N/A") . "</td>";
+        echo "<td>" . $row["transaction_id"] . "</td>";
+        echo "<td>" . $row["amount"] . "</td>";
+        echo "<td>" . $row["transaction_date"] . "</td>";
+        echo "</tr>";
+    }
+    
+    echo "</table>";
+} else {
+    echo "No donation records found.";
+}
+
+// Close database connection
+mysqli_close($conn);
+?>
